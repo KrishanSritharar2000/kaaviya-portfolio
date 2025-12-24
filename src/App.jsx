@@ -1,4 +1,4 @@
-import React, { useMemo } from "react";
+import React, { useMemo, useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import {
   ArrowRight,
@@ -13,6 +13,69 @@ import {
   CalendarDays,
   Calendar,
 } from "lucide-react";
+
+function TypingAnimation({ text, className = "" }) {
+  const [displayText, setDisplayText] = useState("");
+  const [currentIndex, setCurrentIndex] = useState(0);
+
+  useEffect(() => {
+    if (currentIndex < text.length) {
+      const timeout = setTimeout(() => {
+        setDisplayText(prev => prev + text[currentIndex]);
+        setCurrentIndex(prev => prev + 1);
+      }, 100); // Adjust typing speed here (milliseconds)
+
+      return () => clearTimeout(timeout);
+    }
+  }, [currentIndex, text]);
+
+  return (
+    <span className={className}>
+      {displayText}
+      <motion.span
+        animate={{ opacity: [0, 1, 0] }}
+        transition={{ duration: 1, repeat: Infinity, ease: "easeInOut" }}
+        className="inline-block w-0.5 h-6 bg-indigo-600 ml-1"
+      />
+    </span>
+  );
+}
+
+function ScrollTypingAnimation({ text, className = "" }) {
+  const [displayText, setDisplayText] = useState("");
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const [isInView, setIsInView] = useState(false);
+
+  useEffect(() => {
+    if (isInView && currentIndex < text.length) {
+      const timeout = setTimeout(() => {
+        setDisplayText(prev => prev + text[currentIndex]);
+        setCurrentIndex(prev => prev + 1);
+      }, 60); // Slightly faster for section titles
+
+      return () => clearTimeout(timeout);
+    }
+  }, [currentIndex, text, isInView]);
+
+  return (
+    <motion.span 
+      className={className}
+      initial={{ opacity: 0 }}
+      whileInView={{ opacity: 1 }}
+      onViewportEnter={() => setIsInView(true)}
+      viewport={{ once: true, amount: 0.8 }}
+    >
+      {displayText}
+      {isInView && currentIndex < text.length && (
+        <motion.span
+          animate={{ opacity: [0, 1, 0] }}
+          transition={{ duration: 0.8, repeat: Infinity, ease: "easeInOut" }}
+          className="inline-block w-0.5 h-5 bg-indigo-600 ml-1"
+        />
+      )}
+    </motion.span>
+  );
+}
 
 /**
  * Kaaviya Paramalingam — Portfolio
@@ -160,7 +223,7 @@ function Section({ id, eyebrow, title, children }) {
         {eyebrow ? (
           <motion.div 
             whileHover={{ scale: 1.05, y: -2 }}
-            className="inline-flex items-center gap-2 rounded-full border border-purple-200 bg-gradient-to-r from-purple-50 to-pink-50 px-4 py-2 text-sm font-medium text-purple-800 shadow-sm backdrop-blur cursor-default"
+            className="inline-flex items-center gap-2 rounded-full border border-purple-200/50 bg-gradient-to-r from-purple-50/80 via-pink-50/80 to-indigo-50/80 px-4 py-2 text-sm font-medium text-purple-800 shadow-sm backdrop-blur-sm"
           >
             <motion.div
               animate={{ 
@@ -177,12 +240,12 @@ function Section({ id, eyebrow, title, children }) {
             {eyebrow}
           </motion.div>
         ) : null}
-        <motion.h2 
-          variants={slideInLeft}
-          className="mt-4 text-2xl md:text-3xl font-semibold tracking-tight text-slate-900 bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 bg-clip-text"
-        >
-          {title}
-        </motion.h2>
+        <h2 className="mt-4 text-2xl md:text-3xl font-semibold tracking-tight text-slate-900">
+          <ScrollTypingAnimation 
+            text={title}
+            className="bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 bg-clip-text"
+          />
+        </h2>
       </motion.div>
       {children}
     </section>
@@ -421,9 +484,10 @@ export default function App() {
                 transition={{ duration: 0.8, delay: 0.4 }}
                 className="mt-6 text-4xl md:text-5xl font-bold tracking-tight"
               >
-                <span className="bg-gradient-to-r from-slate-900 via-indigo-800 to-purple-900 bg-clip-text text-transparent">
-                  {name}
-                </span>
+                <TypingAnimation 
+                  text={name}
+                  className="bg-gradient-to-r from-slate-900 via-indigo-800 to-purple-900 bg-clip-text text-transparent"
+                />
               </motion.h1>
 
               <motion.p 
