@@ -41,6 +41,111 @@ function TypingAnimation({ text, className = "" }) {
   );
 }
 
+function DefaultCalendar() {
+  const [selectedDate, setSelectedDate] = useState(null);
+  const [selectedTime, setSelectedTime] = useState(null);
+
+  const today = new Date();
+  const nextWeek = Array.from({ length: 7 }, (_, i) => {
+    const date = new Date(today);
+    date.setDate(today.getDate() + i + 1);
+    return date;
+  });
+
+  const timeSlots = [
+    "9:00 AM", "10:00 AM", "11:00 AM", "1:00 PM", 
+    "2:00 PM", "3:00 PM", "4:00 PM", "5:00 PM"
+  ];
+
+  return (
+    <div className="p-4 space-y-4">
+      <div className="text-center mb-6">
+        <h3 className="text-lg font-semibold text-slate-800 mb-2">Select a Date & Time</h3>
+        <p className="text-sm text-slate-600">Choose your preferred meeting slot</p>
+      </div>
+
+      {/* Date Selection */}
+      <div className="space-y-3">
+        <h4 className="text-sm font-medium text-slate-700">Available Dates</h4>
+        <div className="grid grid-cols-2 gap-2">
+          {nextWeek.slice(0, 6).map((date, idx) => (
+            <motion.button
+              key={idx}
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              onClick={() => setSelectedDate(date)}
+              className={`p-3 rounded-xl text-sm transition-all ${
+                selectedDate?.toDateString() === date.toDateString()
+                  ? "bg-green-100 border-2 border-green-500 text-green-800"
+                  : "bg-slate-50 border border-slate-200 text-slate-700 hover:bg-slate-100"
+              }`}
+            >
+              <div className="font-medium">{date.toLocaleDateString('en-US', { weekday: 'short' })}</div>
+              <div className="text-xs">{date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</div>
+            </motion.button>
+          ))}
+        </div>
+      </div>
+
+      {/* Time Selection */}
+      {selectedDate && (
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="space-y-3"
+        >
+          <h4 className="text-sm font-medium text-slate-700">Available Times</h4>
+          <div className="grid grid-cols-2 gap-2">
+            {timeSlots.slice(0, 6).map((time, idx) => (
+              <motion.button
+                key={idx}
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                onClick={() => setSelectedTime(time)}
+                className={`p-2 rounded-lg text-sm transition-all ${
+                  selectedTime === time
+                    ? "bg-green-100 border-2 border-green-500 text-green-800"
+                    : "bg-slate-50 border border-slate-200 text-slate-700 hover:bg-slate-100"
+                }`}
+              >
+                {time}
+              </motion.button>
+            ))}
+          </div>
+        </motion.div>
+      )}
+
+      {/* Contact Button */}
+      {selectedDate && selectedTime && (
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="pt-4"
+        >
+          <motion.a
+            href={`mailto:kaaviya@example.com?subject=Meeting Request&body=Hi Kaaviya,%0D%0A%0D%0AI'd like to schedule a meeting for ${selectedDate.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })} at ${selectedTime}.%0D%0A%0D%0APlease let me know if this works for you.%0D%0A%0D%0AThank you!`}
+            whileHover={{ scale: 1.02, y: -2 }}
+            whileTap={{ scale: 0.98 }}
+            className="w-full inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-green-600 to-emerald-600 px-4 py-3 text-sm font-semibold text-white shadow-sm hover:shadow-md transition-all duration-300"
+          >
+            <Calendar className="h-4 w-4" />
+            Request Meeting via Email
+          </motion.a>
+          <p className="text-xs text-slate-500 text-center mt-2">
+            This will open your email client with pre-filled details
+          </p>
+        </motion.div>
+      )}
+
+      <div className="pt-4 border-t border-slate-200">
+        <p className="text-xs text-slate-500 text-center">
+          This is a demo calendar. Set up your real Calendly link to enable direct booking.
+        </p>
+      </div>
+    </div>
+  );
+}
+
 function ScrollTypingAnimation({ text, className = "" }) {
   const [displayText, setDisplayText] = useState("");
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -295,6 +400,11 @@ export default function App() {
   const linkedinHref = "https://www.linkedin.com/in/kaaviya/"; // update if needed
   const cvHref = "/Kaaviya_Paramalingam_CV.pdf"; // add to /public
   const calendlyHref = "https://calendly.com/kaaviya"; // update with your actual Calendly link
+  
+  // Check if Calendly is properly configured (not the default placeholder)
+  const isCalendlyConfigured = calendlyHref !== "https://calendly.com/kaaviya" && 
+                               calendlyHref.includes('calendly.com/') && 
+                               !calendlyHref.includes('example');
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100 font-sans text-slate-900 relative overflow-hidden">
@@ -968,48 +1078,38 @@ export default function App() {
         {/* CONTACT */}
         <Section id="contact" eyebrow="Contact" title="Let’s connect">
           <motion.div
-            variants={fadeUp}
+            variants={stagger}
             initial="hidden"
             whileInView="show"
             viewport={{ once: true, amount: 0.25 }}
-            className="rounded-3xl border border-slate-200 bg-white/70 p-7 shadow-sm backdrop-blur"
+            className="grid gap-8 md:grid-cols-2"
           >
-            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6">
-              <div>
+            {/* Contact Info */}
+            <motion.div
+              variants={fadeUp}
+              className="rounded-3xl border border-slate-200 bg-white/70 p-7 shadow-sm backdrop-blur"
+            >
+              <div className="mb-6">
                 <h3 className="text-lg font-semibold text-slate-900">Open to conversations & opportunities</h3>
                 <p className="mt-2 text-slate-700">
-                  Based in {location}. Connect via LinkedIn, schedule a call, or download my CV directly.
+                  Based in {location}. Connect via LinkedIn or download my CV directly.
                 </p>
               </div>
 
-              <div className="flex flex-wrap items-center gap-3">
+              <div className="flex flex-col gap-3">
                 <motion.a
                   href={linkedinHref}
                   target="_blank"
                   rel="noreferrer"
                   whileHover={{ scale: 1.05, y: -2 }}
                   whileTap={{ scale: 0.98 }}
-                  className="inline-flex items-center gap-2 rounded-2xl border border-slate-200 bg-white px-5 py-3 text-sm font-semibold text-slate-900 shadow-sm hover:shadow-md backdrop-blur transition-all duration-300"
+                  className="inline-flex items-center gap-3 rounded-2xl border border-slate-200 bg-white px-5 py-4 text-sm font-semibold text-slate-900 shadow-sm hover:shadow-md backdrop-blur transition-all duration-300"
                 >
-                  <Linkedin className="h-4 w-4 text-blue-600" />
-                  LinkedIn
-                </motion.a>
-                
-                <motion.a
-                  href={calendlyHref}
-                  target="_blank"
-                  rel="noreferrer"
-                  whileHover={{ 
-                    scale: 1.05, 
-                    y: -2,
-                    boxShadow: "0 10px 25px -5px rgba(34, 197, 94, 0.4)"
-                  }}
-                  whileTap={{ scale: 0.98 }}
-                  className="inline-flex items-center gap-2 rounded-2xl bg-gradient-to-r from-green-600 to-emerald-600 px-5 py-3 text-sm font-semibold text-white shadow-sm hover:shadow-lg transition-all duration-300 relative overflow-hidden group"
-                >
-                  <div className="absolute inset-0 bg-gradient-to-r from-emerald-600 to-teal-600 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                  <Calendar className="h-4 w-4 relative z-10" />
-                  <span className="relative z-10">Schedule Call</span>
+                  <Linkedin className="h-5 w-5 text-blue-600" />
+                  <div>
+                    <div className="text-left">Connect on LinkedIn</div>
+                    <div className="text-xs text-slate-500">Professional networking</div>
+                  </div>
                 </motion.a>
                 
                 <motion.a
@@ -1020,14 +1120,78 @@ export default function App() {
                     boxShadow: "0 10px 25px -5px rgba(99, 102, 241, 0.4)"
                   }}
                   whileTap={{ scale: 0.98 }}
-                  className="inline-flex items-center gap-2 rounded-2xl bg-gradient-to-r from-indigo-600 to-purple-600 px-5 py-3 text-sm font-semibold text-white shadow-sm hover:shadow-lg transition-all duration-300 relative overflow-hidden group"
+                  className="inline-flex items-center gap-3 rounded-2xl bg-gradient-to-r from-indigo-600 to-purple-600 px-5 py-4 text-sm font-semibold text-white shadow-sm hover:shadow-lg transition-all duration-300 relative overflow-hidden group"
                 >
                   <div className="absolute inset-0 bg-gradient-to-r from-purple-600 to-pink-600 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                  <Download className="h-4 w-4 relative z-10" />
-                  <span className="relative z-10">Download CV</span>
+                  <Download className="h-5 w-5 relative z-10" />
+                  <div className="relative z-10 text-left">
+                    <div>Download CV</div>
+                    <div className="text-xs text-white/80">Full resume & portfolio</div>
+                  </div>
                 </motion.a>
               </div>
-            </div>
+            </motion.div>
+
+            {/* Calendly Widget */}
+            <motion.div
+              variants={fadeUp}
+              className="rounded-3xl border border-slate-200 bg-white/70 p-4 shadow-sm backdrop-blur overflow-hidden"
+            >
+              <div className="mb-4 px-3">
+                <h3 className="text-lg font-semibold text-slate-900 flex items-center gap-2">
+                  <Calendar className="h-5 w-5 text-green-600" />
+                  Schedule a Call
+                </h3>
+                <p className="mt-1 text-sm text-slate-600">
+                  {isCalendlyConfigured 
+                    ? "Book a time that works for both of us to discuss opportunities."
+                    : "Choose a preferred time and we'll coordinate via email."
+                  }
+                </p>
+              </div>
+              
+              {/* Calendly Inline Widget or Default Calendar */}
+              {isCalendlyConfigured ? (
+                <div className="relative">
+                  <iframe
+                    src={`${calendlyHref}?embed_domain=localhost&embed_type=Inline`}
+                    width="100%"
+                    height="600"
+                    frameBorder="0"
+                    scrolling="no"
+                    className="rounded-2xl"
+                    title="Schedule a meeting with Kaaviya"
+                  />
+                  
+                  {/* Calendly loading fallback */}
+                  <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-green-50 to-emerald-50 rounded-2xl">
+                    <div className="text-center">
+                      <motion.div
+                        animate={{ rotate: 360 }}
+                        transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
+                        className="mx-auto mb-3 h-8 w-8 border-2 border-green-600 border-t-transparent rounded-full"
+                      />
+                      <p className="text-sm text-green-700 font-medium">Loading calendar...</p>
+                      <p className="text-xs text-green-600 mt-1">
+                        If this doesn't load, visit{" "}
+                        <a 
+                          href={calendlyHref}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="underline hover:text-green-800"
+                        >
+                          my Calendly page
+                        </a>
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <div className="bg-gradient-to-br from-green-50/50 to-emerald-50/50 rounded-2xl border border-green-100">
+                  <DefaultCalendar />
+                </div>
+              )}
+            </motion.div>
           </motion.div>
         </Section>
 
